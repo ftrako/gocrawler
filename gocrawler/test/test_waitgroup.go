@@ -10,7 +10,7 @@ var queue sync.WaitGroup
 
 var count = 0
 
-func TestWait() {
+func TestWaitGroup() {
 	fmt.Println("started...")
 	go newTest()
 	queue.Add(1)
@@ -20,12 +20,19 @@ func TestWait() {
 }
 
 func newTest() {
-	defer queue.Done()
+	defer func() {
+		//queue.Done()
+
+		if count > 100000 {
+			queue.Done()
+			return
+		}
+		go newTest()
+	}()
 	count++
-	fmt.Println("newTest", time.Now(), count)
-	if count > 100 {
-		return
+	if (count % 10000) == 0 {
+		fmt.Println("newTest", time.Now(), count)
 	}
-	go newTest()
-	queue.Add(1)
+	time.Sleep(time.Millisecond * 10)
+	//queue.Add(1)
 }

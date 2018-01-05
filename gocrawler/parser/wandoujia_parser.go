@@ -2,8 +2,7 @@ package parser
 
 import (
 	"gocrawler/bean"
-	"gocrawler/db"
-	"gocrawler/util/stringutil"
+	"gocrawler/util/strutil"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -11,17 +10,33 @@ import (
 
 type WandoujiaParser struct {
 	BaseParser
+
+	os        string // android or ios
+	storeId   string
+	storeName string
 }
 
-func (p *WandoujiaParser) Parse(doc *goquery.Document) {
+func (p *WandoujiaParser) Filter(url string) bool {
+	if !strings.Contains(url, "wandoujia.com") {
+		return false
+	}
+	if !p.BaseParser.Filter(url) {
+		return false
+	}
+	return true
+}
+
+func (p *WandoujiaParser) Parse(doc *goquery.Document) []string {
+	var urls = make([]string, 0, 100)
 	if doc == nil {
-		return
+		return urls
 	}
 
 	// 爬所有链接
 	doc.Find("a").Each(func(i int, s *goquery.Selection) {
 		v, _ := s.Attr("href")
-		p.UrlQueue.AddNewUrl(v)
+		//p.urlQueue.AddNewUrl(v)
+		urls = append(urls, v)
 	})
 
 	// 爬分类
@@ -29,6 +44,8 @@ func (p *WandoujiaParser) Parse(doc *goquery.Document) {
 
 	// 爬应用
 	p.parseApp(doc)
+
+	return urls
 }
 
 func (p *WandoujiaParser) parseCategory(doc *goquery.Document) {
@@ -37,20 +54,18 @@ func (p *WandoujiaParser) parseCategory(doc *goquery.Document) {
 	}
 
 	doc.Find("li.app-tag-wrap").Find("a.app-tag").Find("span").Each(func(i int, s *goquery.Selection) {
-		// fmt.Println(s.Text())
 		// 插入第一层
 		var b bean.CategoryBean
 		b.Name = s.Text()
-		db.ReplaceCategory(&b)
+		p.myDB.ReplaceCategory(&b)
 		p.parseSubCategory(doc, "li.app-tag-wrap", s.Text())
 	})
 
 	doc.Find("li.game-tag-wrap").Find("a.game-tag").Find("span").Each(func(i int, s *goquery.Selection) {
-		// fmt.Println(s.Text())
 		// 插入第一层
 		var b bean.CategoryBean
 		b.Name = s.Text()
-		db.ReplaceCategory(&b)
+		p.myDB.ReplaceCategory(&b)
 		p.parseSubCategory(doc, "li.game-tag-wrap", s.Text())
 	})
 }
@@ -61,16 +76,14 @@ func (p *WandoujiaParser) parseSubCategory(doc *goquery.Document, basequery stri
 	}
 	doc.Find(basequery).Find("li.parent-cate").Each(func(i int, subs *goquery.Selection) {
 		subs.Find("a.cate-link").Each(func(j int, subss *goquery.Selection) {
-			// fmt.Println(basename + "-->" + subss.Text())
 			subs.Find("li.child-cate").Each(func(j int, subsss *goquery.Selection) {
 				subsss.Find("a").Each(func(k int, subssss *goquery.Selection) {
-					// fmt.Println(basename + "-->" + subss.Text() + "-->" + subssss.Text())
 					var b bean.CategoryBean
 					b.SuperName = subss.Text()
-					b.StoreId = p.StoreId
-					b.StoreName = p.StoreName
+					b.StoreId = p.storeId
+					b.StoreName = p.storeName
 					b.Name = subssss.Text()
-					db.ReplaceCategory(&b) // 插入分类
+					p.myDB.ReplaceCategory(&b) // 插入分类
 				})
 			})
 		})
@@ -79,8 +92,8 @@ func (p *WandoujiaParser) parseSubCategory(doc *goquery.Document, basequery stri
 
 func (p *WandoujiaParser) parseApp(doc *goquery.Document) {
 	var b bean.AppBean
-	b.Os = p.Os
-	b.StoreId = p.StoreId
+	b.Os = p.os
+	b.StoreId = p.storeId
 	doc.Find("div.detail-wrap").Find("div.detail-top.clearfix").Find("div.app-info").Find("a[data-app-id]").Each(func(j int, s *goquery.Selection) {
 		var text string
 		text, _ = s.Attr("data-app-name")
@@ -118,11 +131,11 @@ func (p *WandoujiaParser) parseApp(doc *goquery.Document) {
 			text := ss.Text()
 			text = strings.Trim(text, "\n")
 			index := strings.Index(text, "\n")
-			text = stringutil.SubString(text, 0, index)
+			text = strutil.SubString(text, 0, index)
 			text = strings.TrimSpace(text)
 			b.MinVersion = text
 		})
 	})
 
-	db.ReplaceApp(&b)
+	p.myDB.ReplaceApp(&b)
 }

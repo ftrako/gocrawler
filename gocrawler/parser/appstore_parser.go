@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"gocrawler/bean"
 	"gocrawler/db"
-	"gocrawler/util/stringutil"
+	"gocrawler/util/strutil"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -15,17 +15,33 @@ import (
 
 type AppStoreParser struct {
 	BaseParser
+
+	os        string // android or ios
+	storeId   string
+	storeName string
+	myDB *db.AppDB
 }
 
-func (p *AppStoreParser) Parse(doc *goquery.Document) {
+func (p *AppStoreParser) Filter(url string) bool {
+	if !strings.Contains(url, "apple.com") {
+		return false
+	}
+	if !p.BaseParser.Filter(url) {
+		return false
+	}
+	return true
+}
+
+func (p *AppStoreParser) Parse(doc *goquery.Document) []string{
+	var urls = make([]string, 0, 100)
 	if doc == nil {
-		return
+		return urls
 	}
 
 	// 爬所有链接
 	doc.Find("a").Each(func(i int, s *goquery.Selection) {
 		v, _ := s.Attr("href")
-		p.UrlQueue.AddNewUrl(v)
+		urls = append(urls, v)
 	})
 
 	// 爬分类
@@ -33,6 +49,8 @@ func (p *AppStoreParser) Parse(doc *goquery.Document) {
 
 	// 爬应用
 	p.parseApp(doc)
+
+	return urls
 }
 
 func (p *AppStoreParser) parseCategory(doc *goquery.Document) {
@@ -49,9 +67,9 @@ func (p *AppStoreParser) parseCategory(doc *goquery.Document) {
 		s.Find("li").Find("a").Each(func(i int, s2 *goquery.Selection) {
 			var c bean.CategoryBean
 			c.Name = s2.Text()
-			c.StoreId = p.StoreId
-			c.StoreName = p.StoreName
-			db.ReplaceCategory(&c)
+			c.StoreId = p.storeId
+			c.StoreName = p.storeName
+			p.myDB.ReplaceCategory(&c)
 		})
 
 		// 当前selected项
@@ -66,19 +84,19 @@ func (p *AppStoreParser) parseCategory(doc *goquery.Document) {
 		level1Name = s2.Text()
 		var c bean.CategoryBean
 		c.Name = s2.Text()
-		c.StoreId = p.StoreId
-		c.StoreName = p.StoreName
+		c.StoreId = p.storeId
+		c.StoreName = p.storeName
 		c.SuperName = level0Name
-		db.ReplaceCategory(&c)
+		p.myDB.ReplaceCategory(&c)
 
 		// 第三级
 		s.Find("ul").Find("li").Find("a").Each(func(i int, s2 *goquery.Selection) {
 			var c2 bean.CategoryBean
 			c2.Name = s2.Text()
-			c2.StoreId = p.StoreId
-			c2.StoreName = p.StoreName
+			c2.StoreId = p.storeId
+			c2.StoreName = p.storeName
 			c2.SuperName = level1Name
-			db.ReplaceCategory(&c2)
+			p.myDB.ReplaceCategory(&c2)
 		})
 
 	})
@@ -93,7 +111,7 @@ func (p *AppStoreParser) parseApp(doc *goquery.Document) {
 
 	start := strings.LastIndex(text, "/") + 3
 	end := strings.LastIndex(text, "?")
-	text = stringutil.SubString(text, start, end)
+	text = strutil.SubString(text, start, end)
 
 	// lookup应用信息，全球收不到时再搜索中国区
 	jsontext := p.requestJsonFile("https://itunes.apple.com/lookup?id=" + text)
@@ -106,14 +124,14 @@ func (p *AppStoreParser) parseApp(doc *goquery.Document) {
 		return
 	}
 
-	b.Os = p.Os
-	b.StoreId = p.StoreId
+	b.Os = p.os
+	b.StoreId = p.storeId
 
 	// b.Name = doc.Find("div#title.intro").Find("h1[itemprop=name]").First().Text()
 
 	b.Category = ";" + doc.Find("div#left-stack").Find("ul.list").Find("li.genre").Find("span[itemprop=applicationCategory]").First().Text() + ";"
 
-	db.ReplaceApp(b)
+	p.myDB.ReplaceApp(b)
 }
 
 func (p *AppStoreParser) requestJsonFile(url string) string {
@@ -159,7 +177,7 @@ func (p *AppStoreParser) parseJson(jsontext string) *bean.AppBean {
 		b.Size = strconv.Itoa(size/1024.0/1024) + " MB"
 		text = newV["currentVersionReleaseDate"].(string)
 		index := strings.Index(text, "T")
-		text = stringutil.SubString(text, 0, index)
+		text = strutil.SubString(text, 0, index)
 		strs := strings.Split(text, "-")
 		b.UpdateTime = strs[0] + "年" + strs[1] + "月" + strs[2] + "日"
 		return &b

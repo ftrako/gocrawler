@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"gocrawler/parser"
 )
 
 type A struct {
@@ -26,14 +25,14 @@ func (b *B) Run() {
 }
 
 func TestHelloWorld() {
-	var p parser.IParser
-	p = parser.NewWandoujiaParser()
-	p.Parse(nil)
-	fmt.Println(p.GetOs())
-	fmt.Println(p.GetStoreId())
-
-	p = parser.NewAppStoreParser()
-	p.Parse(nil)
-	fmt.Println(p.GetOs())
-	fmt.Println(p.GetStoreId())
+	//var p parser.IParser
+	//p = parser.NewWandoujiaParser()
+	//p.Parse(nil)
+	//fmt.Println(p.GetOs())
+	//fmt.Println(p.GetStoreId())
+	//
+	//p = parser.NewAppStoreParser()
+	//p.Parse(nil)
+	//fmt.Println(p.GetOs())
+	//fmt.Println(p.GetStoreId())
 }
