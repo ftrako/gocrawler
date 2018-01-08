@@ -16,24 +16,26 @@ import (
 type Crawler struct {
 	urlQueue *urlmgr.UrlQueue
 	parser   parser.IParser
+	//count     uint64 // 抓的条数
 	waitGroup sync.WaitGroup
+	//locker    sync.Mutex
 
 	log *log.FileLog
 }
 
-func NewCrawler(parserType parser.ParserType) *Crawler {
+func NewCrawler(parserType parser.ParserType, resume bool) *Crawler {
 	p := new(Crawler)
-	p.SetupData(parserType)
+	p.SetupData(parserType, resume)
 	return p
 }
 
-func (p *Crawler) SetupData(parserType parser.ParserType) {
+func (p *Crawler) SetupData(parserType parser.ParserType, resume bool) {
 	p.parser = parser.NewParser(parserType)
-	p.urlQueue = urlmgr.NewUrlQueue(p.parser.GetId())
+	p.urlQueue = urlmgr.NewUrlQueue(p.parser.GetId(), resume)
 
 	year, month, day := time.Now().Date()
-	logName := fmt.Sprintf("trace_%04d%02d%02d.log", year, month, day) // 日志，记录超时url
-	p.log = log.NewFileLog(conf.GetDataPath() + "/log/" + logName)
+	logName := fmt.Sprintf("trace_%04d%02d%02d.log", year, month, day)
+	p.log = log.NewFileLog(conf.GetDataPath() + "/" + logName)
 }
 
 func (p *Crawler) Start() {

@@ -19,21 +19,21 @@ func Len(str string) int {
 }
 
 func Index(str string, substr string) int {
-	index:=strings.Index(str, substr)
+	index := strings.Index(str, substr)
 	if index < 0 {
 		return -1
 	}
 	prefix := []byte(str)[0:index]
-	rs:=[]rune(string(prefix))
+	rs := []rune(string(prefix))
 	return len(rs)
 }
 
 func LastIndex(str string, substr string) int {
-	index:=strings.LastIndex(str, substr)
+	index := strings.LastIndex(str, substr)
 	if index < 0 {
 		return -1
 	}
 	prefix := []byte(str)[0:index]
-	rs:=[]rune(string(prefix))
+	rs := []rune(string(prefix))
 	return len(rs)
 }

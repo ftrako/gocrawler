@@ -8,7 +8,7 @@ import (
 )
 
 type DB struct {
-	myDB *sql.DB
+	myDB         *sql.DB
 	insertLocker sync.Mutex
 }
 

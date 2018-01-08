@@ -43,12 +43,12 @@ func (p *Backup) Backup(obj interface{}) {
 	p.locker.Lock()
 	defer p.locker.Unlock()
 
-	// 空数据返回
-	if v, ok := obj.(map[string]string); ok {
-		if len(v) <= 0 {
-			return
-		}
-	}
+	//// 空数据返回
+	//if v, ok := obj.(map[string]string); ok {
+	//	if len(v) <= 0 {
+	//		return
+	//	}
+	//}
 
 	f, err := os.Create(p.path)
 	if err != nil {

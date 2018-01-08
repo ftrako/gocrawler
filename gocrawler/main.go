@@ -14,7 +14,9 @@ import (
 func main() {
 	fmt.Println("start crawler...", time.Now())
 
-	var parserType parser.ParserType = parser.ParserTypeWandoujia
+	var parserType parser.ParserType = parser.ParserTypeAnn9
+
+	var restart = false
 
 	for _, value := range os.Args {
 		if value == "" {
@@ -25,17 +27,31 @@ func main() {
 			return
 		}
 
+		if strings.ToLower(value) == "restart" {
+			restart = true
+		}
+
 		// 指定解析器
 		if v, err := strconv.Atoi(value); err == nil {
-			if v == 1 {
+			switch v {
+			case 0:
+				parserType = parser.ParserTypeWandoujia
+			case 1:
 				parserType = parser.ParserTypeAppStore
-			} else if v == 2 {
+			case 2:
 				parserType = parser.ParserTypeApe51
+			case 3:
+				parserType = parser.ParserTypeAnn9
+			default:
 			}
 		}
 	}
 
-	crawler.SharedService().StartOneCrawler(parserType)
+	if (restart) {
+		crawler.SharedService().StartOneCrawler(parserType)
+	} else {
+		crawler.SharedService().StartOneCrawler(parserType)
+	}
 	crawler.SharedService().Release()
 
 	// time.Sleep(time.Second * 50)

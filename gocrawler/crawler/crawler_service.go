@@ -28,6 +28,10 @@ func SharedService() *CrawlerService {
 	return crawlerServiceInstance
 }
 
+func (p *CrawlerService) RestartOneCrawler(parserType parser.ParserType) {
+	p.StartOneCrawler(parserType)
+}
+
 // 目前只支持一个爬虫器
 func (p *CrawlerService) StartOneCrawler(parserType parser.ParserType) {
 	if len(p.crawlers) >= p.max { // 超过最大限制
@@ -38,7 +42,7 @@ func (p *CrawlerService) StartOneCrawler(parserType parser.ParserType) {
 	if _, ok := p.crawlers[strType]; ok { // 已经启动
 		return
 	}
-	p.crawlers[strType] = NewCrawler(parserType)
+	p.crawlers[strType] = NewCrawler(parserType, true)
 	p.crawlers[strType].Start()
 }
 

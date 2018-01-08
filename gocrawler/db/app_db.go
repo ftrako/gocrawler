@@ -50,9 +50,10 @@ func (p *AppDB) ReplaceCategory(bean *bean.CategoryBean) {
 	if bean == nil || bean.Name == "" {
 		return
 	}
-	stmt, err := p.myDB.Prepare("replace into category values(?,?,?,?,?);")
+	stmt, err := p.myDB.Prepare("replace into category values(?,?,?,?,?,?);")
 	p.checkError(err)
 	_, err2 := stmt.Exec(cryptutil.MD5(bean.Name+bean.SuperName+bean.StoreId),
+		bean.Cid,
 		bean.Name,
 		bean.SuperName,
 		bean.StoreId,

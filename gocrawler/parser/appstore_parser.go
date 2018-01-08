@@ -1,13 +1,9 @@
 package parser
 
 import (
-	"encoding/json"
 	"gocrawler/bean"
 	"gocrawler/db"
 	"gocrawler/util/strutil"
-	"io/ioutil"
-	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -19,7 +15,9 @@ type AppStoreParser struct {
 	os        string // android or ios
 	storeId   string
 	storeName string
-	myDB *db.AppDB
+	myDB      *db.AppDB
+
+	iosJsonParser *AppStoreJsonParser
 }
 
 func (p *AppStoreParser) Filter(url string) bool {
@@ -32,25 +30,22 @@ func (p *AppStoreParser) Filter(url string) bool {
 	return true
 }
 
-func (p *AppStoreParser) Parse(doc *goquery.Document) []string{
-	var urls = make([]string, 0, 100)
-	if doc == nil {
-		return urls
-	}
+func (p *AppStoreParser) Parse(doc *goquery.Document) []string {
+	urls := p.BaseParser.parseHref(doc)
+	p.doParse(doc)
+	return urls
+}
 
-	// 爬所有链接
-	doc.Find("a").Each(func(i int, s *goquery.Selection) {
-		v, _ := s.Attr("href")
-		urls = append(urls, v)
-	})
-
+func (p *AppStoreParser) doParse(doc *goquery.Document) {
+	defer func() {
+		if err := recover(); err != nil {
+		}
+	}()
 	// 爬分类
 	p.parseCategory(doc)
 
 	// 爬应用
 	p.parseApp(doc)
-
-	return urls
 }
 
 func (p *AppStoreParser) parseCategory(doc *goquery.Document) {
@@ -65,8 +60,13 @@ func (p *AppStoreParser) parseCategory(doc *goquery.Document) {
 	// 第一级
 	doc.Find("div#content").Find("div#media-type-nav.nav").Find("ul.list").Each(func(i int, s *goquery.Selection) {
 		s.Find("li").Find("a").Each(func(i int, s2 *goquery.Selection) {
+			href, _ := s2.Attr("href")
+			if href == "" {
+				return
+			}
 			var c bean.CategoryBean
 			c.Name = s2.Text()
+			c.Cid = p.parseCid(href)
 			c.StoreId = p.storeId
 			c.StoreName = p.storeName
 			p.myDB.ReplaceCategory(&c)
@@ -82,7 +82,13 @@ func (p *AppStoreParser) parseCategory(doc *goquery.Document) {
 		var level1Name string
 		s2 := s.Find("a.top-level-genre").First()
 		level1Name = s2.Text()
+		href, _ := s2.Attr("href")
+		if href == "" {
+			return
+		}
+
 		var c bean.CategoryBean
+		c.Cid = p.parseCid(href)
 		c.Name = s2.Text()
 		c.StoreId = p.storeId
 		c.StoreName = p.storeName
@@ -91,7 +97,13 @@ func (p *AppStoreParser) parseCategory(doc *goquery.Document) {
 
 		// 第三级
 		s.Find("ul").Find("li").Find("a").Each(func(i int, s2 *goquery.Selection) {
+			href, _ := s2.Attr("href")
+			if href == "" {
+				return
+			}
+
 			var c2 bean.CategoryBean
+			c2.Cid = p.parseCid(href)
 			c2.Name = s2.Text()
 			c2.StoreId = p.storeId
 			c2.StoreName = p.storeName
@@ -113,13 +125,7 @@ func (p *AppStoreParser) parseApp(doc *goquery.Document) {
 	end := strings.LastIndex(text, "?")
 	text = strutil.SubString(text, start, end)
 
-	// lookup应用信息，全球收不到时再搜索中国区
-	jsontext := p.requestJsonFile("https://itunes.apple.com/lookup?id=" + text)
-	b := p.parseJson(jsontext)
-	if b == nil {
-		jsontext = p.requestJsonFile("https://itunes.apple.com/cn/lookup?id=" + text)
-		b = p.parseJson(jsontext)
-	}
+	b := p.iosJsonParser.requestJsonByAppId(text)
 	if b == nil {
 		return
 	}
@@ -127,60 +133,16 @@ func (p *AppStoreParser) parseApp(doc *goquery.Document) {
 	b.Os = p.os
 	b.StoreId = p.storeId
 
-	// b.Name = doc.Find("div#title.intro").Find("h1[itemprop=name]").First().Text()
-
-	b.Category = ";" + doc.Find("div#left-stack").Find("ul.list").Find("li.genre").Find("span[itemprop=applicationCategory]").First().Text() + ";"
-
 	p.myDB.ReplaceApp(b)
 }
 
-func (p *AppStoreParser) requestJsonFile(url string) string {
-	resp, err := http.Get(url)
-	if err != nil {
-		return ""
+func (p *AppStoreParser) parseCid(text string) string {
+	index := strutil.LastIndex(text, "/id") + strutil.Len("/id")
+	cid := strutil.SubString(text, index, strutil.Len(text))
+	index = strutil.Index(cid, "?")
+	if index >= 0 { // 有的链接带有？
+		cid = strutil.SubString(cid, 0, index)
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return ""
-	}
-	return string(body)
-}
-
-func (p *AppStoreParser) parseJson(jsontext string) *bean.AppBean {
-	if jsontext == "" {
-		return nil
-	}
-
-	var dat map[string]interface{}
-	err := json.Unmarshal([]byte(jsontext), &dat)
-	if err != nil {
-		return nil
-	}
-
-	results := dat["results"].([]interface{})
-	for _, v := range results {
-		newV := v.(map[string]interface{})
-		text := newV["bundleId"].(string)
-		if text == "" {
-			continue
-		}
-		var b bean.AppBean
-		b.AppId = text
-		b.IosAppId = strconv.Itoa((int)(newV["trackId"].(float64)))
-		b.Name = newV["trackName"].(string)
-		b.Vender = newV["artistName"].(string)
-		b.MinVersion = newV["minimumOsVersion"].(string)
-		b.Version = newV["version"].(string)
-		text = newV["fileSizeBytes"].(string)
-		size, _ := strconv.Atoi(text)
-		b.Size = strconv.Itoa(size/1024.0/1024) + " MB"
-		text = newV["currentVersionReleaseDate"].(string)
-		index := strings.Index(text, "T")
-		text = strutil.SubString(text, 0, index)
-		strs := strings.Split(text, "-")
-		b.UpdateTime = strs[0] + "年" + strs[1] + "月" + strs[2] + "日"
-		return &b
-	}
-	return nil
+	cid = strings.Replace(cid, " ", "", -1)
+	return cid
 }

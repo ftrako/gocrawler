@@ -3,7 +3,6 @@ package test
 import "fmt"
 
 type TestClassA struct {
-
 }
 
 type TestClassB struct {

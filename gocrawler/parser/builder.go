@@ -35,6 +35,17 @@ func NewParser(parserType ParserType) IParser {
 		p2.startUrl = "http://www.51ape.com/"
 		p2.host = "http://www.51ape.com"
 		p = p2
+	case ParserTypeAnn9:
+		p2 := new(Ann9Parser)
+		p2.os = "ios"
+		p2.storeId = "ann9"
+		p2.storeName = "ann9"
+		p2.id = p2.storeId
+		p2.myDB = db.NewAppDB()
+		p2.startUrl = "http://www.ann9.com/iphone"
+		//p2.startUrl = "http://www.ann9.com/d33_11_1235504705_0.html"
+		p2.host = "http://www.ann9.com"
+		p = p2
 	default:
 	}
 

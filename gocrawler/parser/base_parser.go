@@ -5,6 +5,7 @@ import (
 	"strings"
 	"gocrawler/util/strutil"
 	"net/http"
+	"github.com/PuerkitoBio/goquery"
 )
 
 type BaseParser struct {
@@ -73,4 +74,18 @@ func (p *BaseParser) Filter(url string) bool {
 	}
 
 	return true
+}
+
+func (p *BaseParser) parseHref(doc *goquery.Document) []string {
+	var urls = make([]string, 0, 1000)
+	if doc == nil {
+		return urls
+	}
+
+	// 爬所有链接
+	doc.Find("a").Each(func(i int, s *goquery.Selection) {
+		v, _ := s.Attr("href")
+		urls = append(urls, v)
+	})
+	return urls
 }

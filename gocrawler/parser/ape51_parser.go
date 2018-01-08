@@ -25,20 +25,17 @@ func (p *Ape51Parser) Filter(url string) bool {
 }
 
 func (p *Ape51Parser) Parse(doc *goquery.Document) []string {
-	var urls = make([]string, 0, 100)
-	if doc == nil {
-		return urls
-	}
-
-	// 爬所有链接
-	doc.Find("a").Each(func(i int, s *goquery.Selection) {
-		v, _ := s.Attr("href")
-		urls = append(urls, v)
-	})
-
-	p.parseSong(doc)
-
+	urls := p.BaseParser.parseHref(doc)
+	p.doParse(doc)
 	return urls
+}
+
+func (p *Ape51Parser) doParse(doc *goquery.Document) {
+	defer func() {
+		if err := recover(); err != nil {
+		}
+	}()
+	p.parseSong(doc)
 }
 
 func (p *Ape51Parser) parseSong(doc *goquery.Document) {

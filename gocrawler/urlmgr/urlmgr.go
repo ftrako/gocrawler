@@ -11,7 +11,7 @@ import (
 )
 
 type UrlQueue struct {
-	waitList *list.List      // FIFO
+	waitList *list.List        // FIFO
 	waitMap  map[string]string // key为md5(url),value为url
 	doneMap  map[string]string // key为md5(url),value为url
 
@@ -31,13 +31,13 @@ type UrlQueue struct {
 	timerForBackup *time.Ticker
 }
 
-func NewUrlQueue(name string) *UrlQueue {
+func NewUrlQueue(name string, resume bool) *UrlQueue {
 	queue := new(UrlQueue)
-	queue.SetupData(name)
+	queue.SetupData(name, resume)
 	return queue
 }
 
-func (p *UrlQueue) SetupData(name string) {
+func (p *UrlQueue) SetupData(name string, resume bool) {
 	p.waitMap = make(map[string]string)
 	p.doneMap = make(map[string]string)
 	p.waitList = list.New()
@@ -46,7 +46,9 @@ func (p *UrlQueue) SetupData(name string) {
 	p.waitBak = backup.NewBackup(conf.GetDataPath() + "/url/waiturlmap_" + p.name + ".dat")
 	p.doneBak = backup.NewBackup(conf.GetDataPath() + "/url/doneurlmap_" + p.name + ".dat")
 
-	p.loadBackup()
+	if resume {
+		p.loadBackup()
+	}
 	go p.toggleBackup()
 }
 
@@ -113,7 +115,7 @@ func (p *UrlQueue) DoneUrl(url string) {
 	p.doneMap[md5] = url
 	p.currentRunCount--
 
-	//fmt.Println("doneurl wait len",len(p.waitMap),", done len",len(p.doneMap), ", done url", url)
+	fmt.Println("doneurl wait len", len(p.waitMap), ", done len", len(p.doneMap), ", done url", url)
 }
 
 // Exist true表示队列中已存在
@@ -148,6 +150,7 @@ func (p *UrlQueue) Release() {
 	if p.timerForBackup != nil {
 		p.timerForBackup.Stop()
 	}
+	p.backup()
 }
 
 func (p *UrlQueue) toggleBackup() {

@@ -27,25 +27,22 @@ func (p *WandoujiaParser) Filter(url string) bool {
 }
 
 func (p *WandoujiaParser) Parse(doc *goquery.Document) []string {
-	var urls = make([]string, 0, 100)
-	if doc == nil {
-		return urls
-	}
+	urls := p.BaseParser.parseHref(doc)
+	p.doParse(doc)
+	return urls
+}
 
-	// 爬所有链接
-	doc.Find("a").Each(func(i int, s *goquery.Selection) {
-		v, _ := s.Attr("href")
-		//p.urlQueue.AddNewUrl(v)
-		urls = append(urls, v)
-	})
+func (p *WandoujiaParser) doParse(doc *goquery.Document) {
+	defer func() {
+		if err := recover(); err != nil {
+		}
+	}()
 
 	// 爬分类
 	p.parseCategory(doc)
 
 	// 爬应用
 	p.parseApp(doc)
-
-	return urls
 }
 
 func (p *WandoujiaParser) parseCategory(doc *goquery.Document) {
