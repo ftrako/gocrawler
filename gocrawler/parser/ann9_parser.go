@@ -5,10 +5,20 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"gocrawler/util/strutil"
+	"gocrawler/db"
 )
 
 type Ann9Parser struct {
 	AppStoreParser
+}
+
+func (p *Ann9Parser) SetupData() {
+	p.os = "ios"
+	p.storeId = "ann9"
+	p.storeName = "ann9"
+	p.id = p.storeId
+	p.myDB = db.NewAppDB()
+	p.startUrl = "http://www.ann9.com/iphone"
 }
 
 func (p *Ann9Parser) Filter(url string) bool {

@@ -7,4 +7,5 @@ const (
 	ParserTypeAppStore         // 苹果应用商店
 	ParserTypeApe51            // 51ape网站
 	ParserTypeAnn9             // ann9爬的ios网站
+	ParserTypeFile             // 爬文件
 )

@@ -17,7 +17,23 @@ type AppStoreParser struct {
 	storeName string
 	myDB      *db.AppDB
 
-	iosJsonParser *AppStoreJsonParser
+	iosJsonParser *AppStoreParseJson
+}
+
+func (p *AppStoreParser) SetupData() {
+	p.os = "ios"
+	p.storeId = "appstore"
+	p.storeName = "苹果商店"
+	p.id = p.storeId
+	p.myDB = db.NewAppDB()
+	p.startUrl = "https://itunes.apple.com/cn/genre?id=36"
+}
+
+func (p *AppStoreParser) Release() {
+	if p.myDB != nil {
+		p.myDB.Close()
+		p.myDB = nil
+	}
 }
 
 func (p *AppStoreParser) Filter(url string) bool {

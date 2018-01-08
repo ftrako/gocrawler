@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"gocrawler/db"
 )
 
 type WandoujiaParser struct {
@@ -14,6 +15,16 @@ type WandoujiaParser struct {
 	os        string // android or ios
 	storeId   string
 	storeName string
+	myDB      *db.AppDB
+}
+
+func (p *WandoujiaParser) SetupData() {
+	p.os = "android"
+	p.storeId = "wandoujia"
+	p.storeName = "豌豆荚"
+	p.id = p.storeId
+	p.myDB = db.NewAppDB()
+	p.startUrl = "http://www.wandoujia.com/category/app"
 }
 
 func (p *WandoujiaParser) Filter(url string) bool {

@@ -14,6 +14,19 @@ type Ape51Parser struct {
 	myDB *db.MusicDB
 }
 
+func (p *Ape51Parser) SetupData() {
+	p.myDB = db.NewMusicDB()
+	p.id = "ape51"
+	p.startUrl = "http://www.51ape.com/"
+}
+
+func (p *Ape51Parser) Release() {
+	if p.myDB != nil {
+		p.myDB.Close()
+		p.myDB = nil
+	}
+}
+
 func (p *Ape51Parser) Filter(url string) bool {
 	if !strings.Contains(url, "51ape.com") {
 		return false

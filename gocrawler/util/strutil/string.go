@@ -14,6 +14,14 @@ func SubString(str string, start int, end int) string {
 	return string(innerText[start:end])
 }
 
+func Suffix(str string) string {
+	index := LastIndex(str, ".")
+	if index < 0 {
+		return ""
+	}
+	return SubString(str, index+1, Len(str))
+}
+
 func Len(str string) int {
 	return len([]rune(str))
 }

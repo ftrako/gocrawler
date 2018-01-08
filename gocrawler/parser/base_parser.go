@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"gocrawler/db"
 	"strings"
 	"gocrawler/util/strutil"
 	"net/http"
@@ -10,22 +9,24 @@ import (
 
 type BaseParser struct {
 	startUrl string
-	host     string
+	//host     string
 	id       string
 	//urlQueue  *data.UrlQueue
-	myDB *db.AppDB
 }
 
 func (p *BaseParser) GetStartUrl() string {
 	return p.startUrl
 }
 
-func (p *BaseParser) GetHost() string {
-	return p.host
-}
+//func (p *BaseParser) GetHost() string {
+//	return p.host
+//}
 
 func (p *BaseParser) GetId() string {
 	return p.id
+}
+
+func (p *BaseParser) Release() {
 }
 
 // true表示满足爬虫过滤条件，允许爬
@@ -62,13 +63,22 @@ func (p *BaseParser) Filter(url string) bool {
 		".zip", ".7z", ".gz", ".rar", ".bz2", ".tar", ".iso", ".cab", ".xz", ".parcel",                  // 压缩文件
 		".exe", ".pkg", ".rpm", ".deb", ".apk", ".ipa", ".dll", ".dmg", ".msi",                          // 安装文件
 		".txt", ".pdf", ".doc", ".docx", ".ppt", ".xls", ".xlsx", ".wps", ".log", ".epub", ".json",      // 文档文件
-		".bin", ".bak", "javascript:;"} // 其它文件
+		".bin", ".bak"} // 其它文件
 	for _, v := range filters {
 		if strings.HasSuffix(url, v) {
 			return false
 		}
 	}
 
+	// 包含如下字段表示不是合法的url
+	strs := []string{"javascript:"}
+	for _, v := range strs {
+		if strings.Contains(url, v) {
+			return false
+		}
+	}
+
+	// 页面大小限制
 	if !p.sizeFilter(url) {
 		return false
 	}

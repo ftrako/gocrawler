@@ -11,10 +11,10 @@ import (
 	"gocrawler/bean"
 )
 
-type AppStoreJsonParser struct {
+type AppStoreParseJson struct {
 }
 
-func (p *AppStoreJsonParser) requestJsonByBundleId(bundleId string) *bean.AppBean {
+func (p *AppStoreParseJson) requestJsonByBundleId(bundleId string) *bean.AppBean {
 	// lookup应用信息，全球收不到时再搜索中国区
 	urls := []string{"https://itunes.apple.com/lookup?bundleId=" + bundleId, "https://itunes.apple.com/cn/lookup?bundleId=" + bundleId}
 	var jsontext string
@@ -28,7 +28,7 @@ func (p *AppStoreJsonParser) requestJsonByBundleId(bundleId string) *bean.AppBea
 	return b
 }
 
-func (p *AppStoreJsonParser) requestJsonByAppId(appId string) *bean.AppBean {
+func (p *AppStoreParseJson) requestJsonByAppId(appId string) *bean.AppBean {
 	// lookup应用信息，全球收不到时再搜索中国区
 	urls := []string{"https://itunes.apple.com/lookup?id=" + appId, "https://itunes.apple.com/cn/lookup?id=" + appId}
 	var jsontext string
@@ -42,7 +42,7 @@ func (p *AppStoreJsonParser) requestJsonByAppId(appId string) *bean.AppBean {
 	return b
 }
 
-func (p *AppStoreJsonParser) requestJson(url string) string {
+func (p *AppStoreParseJson) requestJson(url string) string {
 	resp, err := http.Get(url)
 	if err != nil {
 		return ""
@@ -55,7 +55,7 @@ func (p *AppStoreJsonParser) requestJson(url string) string {
 	return string(body)
 }
 
-func (p *AppStoreJsonParser) parseJson(jsontext string) *bean.AppBean {
+func (p *AppStoreParseJson) parseJson(jsontext string) *bean.AppBean {
 	if jsontext == "" {
 		return nil
 	}

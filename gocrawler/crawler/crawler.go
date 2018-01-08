@@ -35,7 +35,18 @@ func (p *Crawler) SetupData(parserType parser.ParserType, resume bool) {
 
 	year, month, day := time.Now().Date()
 	logName := fmt.Sprintf("trace_%04d%02d%02d.log", year, month, day)
-	p.log = log.NewFileLog(conf.GetDataPath() + "/" + logName)
+	p.log = log.NewFileLog(conf.GetDataPath() + "/log/" + logName)
+}
+
+func (p *Crawler) Release() {
+	if p.parser != nil {
+		p.parser.Release()
+		p.parser = nil
+	}
+	if p.urlQueue != nil {
+		p.urlQueue.Release()
+		p.urlQueue = nil
+	}
 }
 
 func (p *Crawler) Start() {
@@ -95,11 +106,16 @@ func (p *Crawler) doWork(url string) {
 			continue
 		}
 		if !strings.HasPrefix(v, "http://") && !strings.HasPrefix(v, "https://") { // 支持内部链接
-			if strings.HasPrefix(v, "/") {
-				v = p.parser.GetHost() + v
-			} else {
-				v = p.parser.GetHost() + "/" + v
+			preUrl := doc.Url.Scheme + "://" + doc.Url.Host // 自动添加host组成一个完整的url
+			if doc.Url.Port() != "" {
+				preUrl += ":" + doc.Url.Port()
 			}
+
+			if !strings.HasPrefix(v, "/") {
+				v = preUrl + "/"
+			}
+
+			v = preUrl + v
 		}
 		if p.urlQueue.Exist(v) { // 先检查是否已存在，再执行过滤器，会提高性能
 			continue

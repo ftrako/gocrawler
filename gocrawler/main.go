@@ -14,7 +14,7 @@ import (
 func main() {
 	fmt.Println("start crawler...", time.Now())
 
-	var parserType parser.ParserType = parser.ParserTypeAnn9
+	var parserType parser.ParserType = parser.ParserTypeFile
 
 	var restart = false
 
@@ -23,7 +23,7 @@ func main() {
 			continue
 		}
 		if strings.ToLower(value) == "test" {
-			test.TestBackup()
+			test.TestCalc()
 			return
 		}
 
@@ -42,13 +42,15 @@ func main() {
 				parserType = parser.ParserTypeApe51
 			case 3:
 				parserType = parser.ParserTypeAnn9
+			case 4:
+				parserType = parser.ParserTypeFile
 			default:
 			}
 		}
 	}
 
-	if (restart) {
-		crawler.SharedService().StartOneCrawler(parserType)
+	if restart {
+		crawler.SharedService().RestartOneCrawler(parserType)
 	} else {
 		crawler.SharedService().StartOneCrawler(parserType)
 	}
