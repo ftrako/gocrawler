@@ -11,6 +11,7 @@ import (
 	"gocrawler/urlmgr"
 	"gocrawler/log"
 	"gocrawler/conf"
+	"gocrawler/util/httputil"
 )
 
 type Crawler struct {
@@ -55,8 +56,6 @@ func (p *Crawler) Start() {
 	p.urlQueue.AddNewUrl(p.parser.GetStartUrl())
 	p.toggleWork()
 	p.waitGroup.Wait()
-
-	p.urlQueue.Release()
 }
 
 func (p *Crawler) toggleWork() {
@@ -78,6 +77,7 @@ func (p *Crawler) toggleWork() {
 func (p *Crawler) doWork(url string) {
 	defer func() {
 		if err := recover(); err != nil {
+			fmt.Println(err)
 		}
 		p.urlQueue.DoneUrl(url)
 		p.toggleWork()
@@ -86,21 +86,22 @@ func (p *Crawler) doWork(url string) {
 		return
 	}
 
-	startTime := time.Now().Unix()
-
-	doc, err := goquery.NewDocument(url)
+	//doc, err := goquery.NewDocument(url)
+	timeout := time.Second * 20
+	resp, err := httputil.DoGetWithTimeout(url, timeout)
 	if err != nil {
+		fmt.Println("error:", url, time.Now())
+		p.log.Println("timeout " + timeout.String() + ", url " + url)
 		return
 	}
 
-	// 拉取网页时间过长，记录下来
-	endTime := time.Now().Unix()
-	if endTime-startTime > 5 {
-		p.log.Println(fmt.Sprintf("long time %0d , url = %s", (endTime - startTime), url))
+	doc, err2 := goquery.NewDocumentFromResponse(resp)
+	if err2 != nil {
+		fmt.Println("error:", err2)
+		return
 	}
 
 	urls := p.parser.Parse(doc)
-
 	for _, v := range urls {
 		if v == "" {
 			continue
@@ -112,7 +113,7 @@ func (p *Crawler) doWork(url string) {
 			}
 
 			if !strings.HasPrefix(v, "/") {
-				v = preUrl + "/"
+				preUrl += "/"
 			}
 
 			v = preUrl + v

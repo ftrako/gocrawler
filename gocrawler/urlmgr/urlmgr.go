@@ -17,12 +17,14 @@ type UrlQueue struct {
 
 	name string
 
-	waitLocker  sync.Mutex
-	doneLocker  sync.Mutex
-	countLocker sync.Mutex
+	//waitLocker  sync.Mutex
+	//doneLocker  sync.Mutex
+	//countLocker sync.Mutex
 
-	runCountMax     int // 最多运行线程数
-	currentRunCount int // 当前运行线程数量
+	locker sync.Mutex // 所有操作用一个锁
+
+	runCountMax int // 最多运行线程数
+	runCount    int // 当前运行线程数量
 
 	waitBak *backup.Backup
 	doneBak *backup.Backup
@@ -65,10 +67,12 @@ func (p *UrlQueue) AddNewUrl(url string) {
 		return
 	}
 
-	md5 := cryptutil.MD5(url)
+	//p.waitLocker.Lock()
+	//defer p.waitLocker.Unlock()
+	p.locker.Lock()
+	defer p.locker.Unlock()
 
-	p.waitLocker.Lock()
-	defer p.waitLocker.Unlock()
+	md5 := cryptutil.MD5(url)
 	p.waitList.PushBack(url)
 	p.waitMap[md5] = url
 
@@ -77,60 +81,76 @@ func (p *UrlQueue) AddNewUrl(url string) {
 
 // 获取等待队列中的url，自动同步从等待队列中移除
 func (p *UrlQueue) GetWaitUrl() string {
-	p.waitLocker.Lock()
-	defer p.waitLocker.Unlock()
-	p.countLocker.Lock()
-	defer p.countLocker.Unlock()
+	//p.waitLocker.Lock()
+	//defer p.waitLocker.Unlock()
+	//p.countLocker.Lock()
+	//defer p.countLocker.Unlock()
+	//p.doneLocker.Lock()
+	//defer p.doneLocker.Unlock()
+	p.locker.Lock()
+	defer p.locker.Unlock()
 
 	if len(p.waitMap) <= 0 { // 等待队列没有数据了
 		return ""
 	}
-	if p.currentRunCount >= p.runCountMax { // 运行池已满
+	if p.runCount >= p.runCountMax { // 运行池已满
 		return ""
 	}
 
-	ele := p.waitList.Front()
-	if ele == nil {
-		return ""
+	for {
+		ele := p.waitList.Front()
+		if ele == nil {
+			return ""
+		}
+		url := ele.Value.(string)
+		md5 := cryptutil.MD5(url)
+
+		if p.doneMap[md5] != "" {
+			continue
+		}
+		p.runCount++
+
+		p.waitList.Remove(ele)
+		//delete(p.waitMap, md5)
+		return url
 	}
 
-	p.currentRunCount++
-	url := ele.Value.(string)
-
-	p.waitList.Remove(ele)
-	md5 := cryptutil.MD5(url)
-	delete(p.waitMap, md5)
-
-	return url
+	return ""
 }
 
 // DoneUrl run->done状态切换
 func (p *UrlQueue) DoneUrl(url string) {
-	p.doneLocker.Lock()
-	defer p.doneLocker.Unlock()
-	p.countLocker.Lock()
-	defer p.countLocker.Unlock()
+	//p.doneLocker.Lock()
+	//defer p.doneLocker.Unlock()
+	//p.countLocker.Lock()
+	//defer p.countLocker.Unlock()
+	//p.waitLocker.Lock()
+	//p.waitLocker.Unlock()
+	p.locker.Lock()
+	defer p.locker.Unlock()
 
 	md5 := cryptutil.MD5(url)
+	delete(p.waitMap, md5)
 	p.doneMap[md5] = url
-	p.currentRunCount--
+	p.runCount--
 
-	fmt.Println("doneurl wait len", len(p.waitMap), ", done len", len(p.doneMap), ", done url", url)
+	fmt.Println("doneurl wait len", len(p.waitMap), ",run len", p.runCount, ", done len", len(p.doneMap), ", done url", url)
 }
 
 // Exist true表示队列中已存在
 func (p *UrlQueue) Exist(url string) bool {
-	p.waitLocker.Lock()
-	defer p.waitLocker.Unlock()
-	p.doneLocker.Lock()
-	defer p.doneLocker.Unlock()
+	//p.waitLocker.Lock()
+	//defer p.waitLocker.Unlock()
+	//p.doneLocker.Lock()
+	//defer p.doneLocker.Unlock()
+
+	p.locker.Lock()
+	defer p.locker.Unlock()
 
 	md5 := cryptutil.MD5(url)
-
 	if _, ok := p.waitMap[md5]; ok {
 		return true
 	}
-
 	if _, ok := p.doneMap[md5]; ok {
 		return true
 	}
@@ -138,12 +158,14 @@ func (p *UrlQueue) Exist(url string) bool {
 }
 
 func (p *UrlQueue) Empty() bool {
-	p.waitLocker.Lock()
-	defer p.waitLocker.Unlock()
-	p.countLocker.Lock()
-	defer p.countLocker.Unlock()
+	//p.waitLocker.Lock()
+	//defer p.waitLocker.Unlock()
+	//p.countLocker.Lock()
+	//defer p.countLocker.Unlock()
+	p.locker.Lock()
+	defer p.locker.Unlock()
 
-	return (len(p.waitMap) + p.currentRunCount) <= 0
+	return (len(p.waitMap) + p.runCount) <= 0
 }
 
 func (p *UrlQueue) Release() {
@@ -161,8 +183,13 @@ func (p *UrlQueue) toggleBackup() {
 }
 
 func (p *UrlQueue) loadBackup() {
-	p.waitLocker.Lock()
-	defer p.waitLocker.Unlock()
+	//p.waitLocker.Lock()
+	//defer p.waitLocker.Unlock()
+	//p.doneLocker.Lock()
+	//defer p.doneLocker.Unlock()
+
+	p.locker.Lock()
+	defer p.locker.Unlock()
 
 	d := p.waitBak.LoadData()
 	if d != nil {
@@ -172,8 +199,8 @@ func (p *UrlQueue) loadBackup() {
 		}
 	}
 
-	p.doneLocker.Lock()
-	defer p.doneLocker.Unlock()
+	//p.doneLocker.Lock()
+	//defer p.doneLocker.Unlock()
 	d = p.doneBak.LoadData()
 	if d != nil {
 		for k, v := range d {
@@ -185,14 +212,17 @@ func (p *UrlQueue) loadBackup() {
 }
 
 func (p *UrlQueue) backup() {
-	p.waitLocker.Lock()
-	defer p.waitLocker.Unlock()
+	//p.waitLocker.Lock()
+	//defer p.waitLocker.Unlock()
+	//p.doneLocker.Lock()
+	//defer p.doneLocker.Unlock()
+	//p.countLocker.Lock()
+	//defer p.countLocker.Unlock()
+	p.locker.Lock()
+	defer p.locker.Unlock()
+
 	p.waitBak.Backup(p.waitMap)
-
-	p.doneLocker.Lock()
-	defer p.doneLocker.Unlock()
 	p.doneBak.Backup(p.doneMap)
-
 	p.count++
 
 	fmt.Println("backup wait len", len(p.waitMap), ", done len", len(p.doneMap), ", count", p.count)

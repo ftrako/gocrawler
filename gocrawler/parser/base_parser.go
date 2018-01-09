@@ -3,24 +3,19 @@ package parser
 import (
 	"strings"
 	"gocrawler/util/strutil"
-	"net/http"
 	"github.com/PuerkitoBio/goquery"
+	"gocrawler/util/httputil"
+	"time"
 )
 
 type BaseParser struct {
 	startUrl string
-	//host     string
 	id       string
-	//urlQueue  *data.UrlQueue
 }
 
 func (p *BaseParser) GetStartUrl() string {
 	return p.startUrl
 }
-
-//func (p *BaseParser) GetHost() string {
-//	return p.host
-//}
 
 func (p *BaseParser) GetId() string {
 	return p.id
@@ -31,16 +26,17 @@ func (p *BaseParser) Release() {
 
 // true表示满足爬虫过滤条件，允许爬
 func (p *BaseParser) sizeFilter(url string) bool {
-	return true
-	res, err := http.Get(url)
+	return true // 暂时取消size过滤
+	res, err := httputil.DoGetWithTimeout(url, time.Second*1)
 	if err != nil { // 有可能地址错误或网络不通
 		return false
 	}
+	defer res.Body.Close()
 	if res.ContentLength <= 0 {
 		return true // 获取不到内容大小，假定为符合条件
 	}
 
-	if res.ContentLength > 2000000 { // 文件大于3MB（约）
+	if res.ContentLength > 1500000 { // 文件大于1.5MB（约）
 		return false
 	}
 	return true
@@ -57,12 +53,12 @@ func (p *BaseParser) Filter(url string) bool {
 
 	// 排除css,js等
 	filters := []string{".css", ".js",
-		".ico", ".jpg", ".jpeg", ".png", ".bmp", ".tif", ".gif",                                         // 图片
-		".mp3", ".asf", ".wma", ".wav", ".rm", ".real", ".ape", ".midi", ".flac", ".vqf", ".cd", ".ogg", // 音频
-		".mp4", ".rm", ".rmvb", ".wmv", ".avi", ".3gp", ".mkv", ".flv", ".mpeg",                         // 视频
-		".zip", ".7z", ".gz", ".rar", ".bz2", ".tar", ".iso", ".cab", ".xz", ".parcel",                  // 压缩文件
-		".exe", ".pkg", ".rpm", ".deb", ".apk", ".ipa", ".dll", ".dmg", ".msi",                          // 安装文件
-		".txt", ".pdf", ".doc", ".docx", ".ppt", ".xls", ".xlsx", ".wps", ".log", ".epub", ".json",      // 文档文件
+		".ico", ".jpg", ".jpeg", ".png", ".bmp", ".tif", ".gif",                                             // 图片
+		".mp3", ".asf", ".wma", ".wav", ".rm", ".real", ".ape", ".midi", ".flac", ".vqf", ".cd", ".ogg",     // 音频
+		".mp4", ".rm", ".rmvb", ".wmv", ".avi", ".3gp", ".mkv", ".flv", ".mpeg", ".mov", ".dat",             // 视频
+		".zip", ".7z", ".gz", ".rar", ".bz2", ".tar", ".iso", ".cab", ".xz", ".parcel",                      // 压缩文件
+		".exe", ".pkg", ".rpm", ".deb", ".apk", ".ipa", ".dll", ".dmg", ".msi",                              // 安装文件
+		".txt", ".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".wps", ".log", ".epub", ".json", // 文档文件
 		".bin", ".bak"} // 其它文件
 	for _, v := range filters {
 		if strings.HasSuffix(url, v) {
