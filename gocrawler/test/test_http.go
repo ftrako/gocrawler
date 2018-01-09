@@ -1,10 +1,10 @@
 package test
 
 import (
-	"net/http"
 	"fmt"
-	"time"
 	"gocrawler/util/httputil"
+	"net/http"
+	"time"
 )
 
 func TestHttp() {

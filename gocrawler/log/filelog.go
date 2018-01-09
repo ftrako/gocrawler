@@ -1,8 +1,8 @@
 package log
 
 import (
-	"os"
 	"gocrawler/util/fileutil"
+	"os"
 )
 
 type FileLog struct {

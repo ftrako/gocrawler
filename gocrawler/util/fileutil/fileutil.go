@@ -1,8 +1,8 @@
 package fileutil
 
 import (
-	"os"
 	"gocrawler/util/strutil"
+	"os"
 )
 
 func Exist(path string) bool {

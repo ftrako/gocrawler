@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"gocrawler/util/strutil"
 	"gocrawler/db"
+	"gocrawler/util/strutil"
 )
 
 type Ann9Parser struct {

@@ -1,8 +1,8 @@
 package httputil
 
 import (
-	"net/http"
 	"net"
+	"net/http"
 	"time"
 )
 

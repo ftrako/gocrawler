@@ -2,10 +2,10 @@ package parser
 
 import (
 	"github.com/PuerkitoBio/goquery"
-	"gocrawler/util/strutil"
-	"strings"
 	"gocrawler/bean"
 	"gocrawler/db"
+	"gocrawler/util/strutil"
+	"strings"
 )
 
 type Java1234FileParser struct {

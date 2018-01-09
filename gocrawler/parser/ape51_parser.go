@@ -1,9 +1,9 @@
 package parser
 
 import (
-	"gocrawler/db"
 	"github.com/PuerkitoBio/goquery"
 	"gocrawler/bean"
+	"gocrawler/db"
 	"gocrawler/util/strutil"
 	"strings"
 )

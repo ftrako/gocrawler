@@ -1,10 +1,10 @@
 package parser
 
 import (
-	"strings"
-	"gocrawler/util/strutil"
 	"github.com/PuerkitoBio/goquery"
 	"gocrawler/util/httputil"
+	"gocrawler/util/strutil"
+	"strings"
 	"time"
 )
 

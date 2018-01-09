@@ -1,8 +1,8 @@
 package db
 
 import (
-	"gocrawler/util/cryptutil"
 	"gocrawler/bean"
+	"gocrawler/util/cryptutil"
 )
 
 type MusicDB struct {

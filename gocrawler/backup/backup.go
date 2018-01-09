@@ -1,10 +1,10 @@
 package backup
 
 import (
-	"os"
 	"encoding/gob"
-	"sync"
 	"gocrawler/util/fileutil"
+	"os"
+	"sync"
 )
 
 type Backup struct {

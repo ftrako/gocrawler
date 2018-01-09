@@ -1,17 +1,17 @@
 package crawler
 
 import (
-	"gocrawler/parser"
-	"sync"
-	"github.com/PuerkitoBio/goquery"
-	"runtime"
 	"fmt"
-	"time"
-	"strings"
-	"gocrawler/urlmgr"
-	"gocrawler/log"
+	"github.com/PuerkitoBio/goquery"
 	"gocrawler/conf"
+	"gocrawler/log"
+	"gocrawler/parser"
+	"gocrawler/urlmgr"
 	"gocrawler/util/httputil"
+	"runtime"
+	"strings"
+	"sync"
+	"time"
 )
 
 type Crawler struct {

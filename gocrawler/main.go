@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"time"
-	"gocrawler/parser"
 	"gocrawler/crawler"
-	"os"
+	"gocrawler/parser"
 	"gocrawler/test"
-	"strings"
+	"os"
 	"strconv"
+	"strings"
+	"time"
 )
 
 func main() {

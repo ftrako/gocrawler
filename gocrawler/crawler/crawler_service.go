@@ -1,10 +1,10 @@
 package crawler
 
 import (
-	"sync"
 	"gocrawler/parser"
-	"time"
 	"runtime"
+	"sync"
+	"time"
 )
 
 type CrawlerService struct {

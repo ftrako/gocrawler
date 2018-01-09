@@ -2,12 +2,12 @@ package urlmgr
 
 import (
 	"container/list"
+	"fmt"
+	"gocrawler/backup"
+	"gocrawler/conf"
+	"gocrawler/util/cryptutil"
 	"sync"
 	"time"
-	"fmt"
-	"gocrawler/conf"
-	"gocrawler/backup"
-	"gocrawler/util/cryptutil"
 )
 
 type UrlQueue struct {

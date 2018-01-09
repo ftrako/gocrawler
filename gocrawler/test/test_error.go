@@ -1,8 +1,8 @@
 package test
 
 import (
-	"sync"
 	"fmt"
+	"sync"
 	"time"
 )
 

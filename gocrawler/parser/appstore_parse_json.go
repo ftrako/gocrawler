@@ -1,14 +1,14 @@
 package parser
 
 import (
-	"net/http"
-	"io/ioutil"
-	"gocrawler/util/strutil"
-	"strings"
-	"fmt"
 	"encoding/json"
-	"strconv"
+	"fmt"
 	"gocrawler/bean"
+	"gocrawler/util/strutil"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 type AppStoreParseJson struct {

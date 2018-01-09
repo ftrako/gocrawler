@@ -1,9 +1,9 @@
 package db
 
 import (
-	"gocrawler/util/cryptutil"
 	"fmt"
 	"gocrawler/bean"
+	"gocrawler/util/cryptutil"
 )
 
 type AppDB struct {
