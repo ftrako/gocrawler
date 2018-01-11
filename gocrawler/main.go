@@ -15,7 +15,7 @@ func main() {
 	startTime := time.Now()
 	fmt.Println("start crawler...", startTime)
 
-	var parserType parser.ParserType = parser.ParserType_None
+	var parserTypes = make([]parser.ParserType, 0, 100)
 
 	var restart = false
 
@@ -25,12 +25,15 @@ func main() {
 		}
 		if strings.ToLower(value) == "test" {
 			test.TestEnum()
-			return
+			continue
 		}
 
 		if strings.ToLower(value) == "restart" {
 			restart = true
+			continue
 		}
+
+		var parserType parser.ParserType = parser.ParserType_None
 
 		// 指定解析器
 		if v, err := strconv.Atoi(value); err == nil {
@@ -58,23 +61,35 @@ func main() {
 			default:
 			}
 		}
+		parserTypes = append(parserTypes, parserType)
 	}
 
-	started := false
-	if restart {
-		started = crawler.SharedService().RestartOneCrawler(parserType)
-	} else {
-		started = crawler.SharedService().StartOneCrawler(parserType)
+	if len(parserTypes) == 0 {
+		parserTypes = append(parserTypes, parser.ParserType_None)
 	}
+
+	for _, v := range parserTypes {
+		startCrawler(v, restart)
+	}
+
 	crawler.SharedService().Release()
-
-	if !started {
-		fmt.Println("error: failed to start crawler")
-	}
 
 	// time.Sleep(time.Second * 50)
 
 	endTime := time.Now()
 	fmt.Println("finished crawler! ", endTime)
 	fmt.Println("take times", endTime.Unix()-startTime.Unix(), "s")
+}
+
+func startCrawler(parserType parser.ParserType, restart bool) {
+	started := false
+	if restart {
+		started = crawler.SharedService().RestartOneCrawler(parserType)
+	} else {
+		started = crawler.SharedService().StartOneCrawler(parserType)
+	}
+
+	if !started {
+		fmt.Println("error: failed to start crawler", parserType)
+	}
 }
