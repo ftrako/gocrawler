@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"gocrawler/db"
 	"gocrawler/util/strutil"
 )
 
@@ -13,11 +12,11 @@ type Ann9Parser struct {
 }
 
 func (p *Ann9Parser) SetupData() {
+	p.AppStoreParser.SetupData()
 	p.os = "ios"
 	p.storeId = "ann9"
 	p.storeName = "ann9"
 	p.id = p.storeId
-	p.myDB = db.NewAppDB()
 	p.startUrl = "http://www.ann9.com/iphone"
 }
 
@@ -32,7 +31,7 @@ func (p *Ann9Parser) Filter(url string) bool {
 }
 
 func (p *Ann9Parser) Parse(doc *goquery.Document) []string {
-	urls := p.BaseParser.parseHref(doc)
+	urls := p.BaseParser.Parse(doc)
 	p.doParse(doc)
 	return urls
 }

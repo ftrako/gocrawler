@@ -3,27 +3,43 @@ package parser
 import (
 	"github.com/PuerkitoBio/goquery"
 	"gocrawler/bean"
-	"gocrawler/db"
 	"gocrawler/util/strutil"
 	"strings"
 )
 
 type Java1234FileParser struct {
+	BaseFileParser
 }
 
-func (p *Java1234FileParser) StartUrl() string {
-	return "http://www.java1234.com"
+func (p *Java1234FileParser) SetupData() {
+	p.BaseFileParser.SetupData()
+	p.startUrl = "http://www.java1234.com"
 }
 
-func (p *Java1234FileParser) FileFilter(url string) bool {
-	if strings.Contains(url, "java1234.com") {
-		return true
-	} else {
+func (p *Java1234FileParser) Filter(url string) bool {
+	if !p.BaseParser.Filter(url) {
 		return false
 	}
+
+	if !strings.Contains(url, "java1234.com") {
+		return false
+	}
+
+	return true
 }
 
-func (p *Java1234FileParser) FileParse(doc *goquery.Document, db *db.FileDB) {
+func (p *Java1234FileParser) Parse(doc *goquery.Document) []string {
+	urls := p.BaseFileParser.Parse(doc)
+	p.doParse(doc)
+	return urls
+}
+
+func (p *Java1234FileParser) doParse(doc *goquery.Document) {
+	defer func() {
+		if err := recover(); err != nil {
+		}
+	}()
+
 	s := doc.Find("head").Find("title").First()
 	name := s.Text()
 	index := strutil.Index(name, " ")
@@ -32,6 +48,9 @@ func (p *Java1234FileParser) FileParse(doc *goquery.Document, db *db.FileDB) {
 	}
 	if strutil.Len(name) > 100 {
 		name = strutil.SubString(name, 0, 100)
+	}
+	if !strings.Contains(strings.ToLower(name), "pd") { // 标题不含pd未非电子书，有时pdf被截成pd
+		return
 	}
 	s = doc.Find("div.content").Find("table").Find("td").Find("span").Find("strong").Find("a").First()
 	if s.Size() <= 0 {
@@ -60,5 +79,6 @@ func (p *Java1234FileParser) FileParse(doc *goquery.Document, db *db.FileDB) {
 	b.Download = link
 	b.Pwd = pwd
 	b.Type = "book"
-	db.ReplaceFile(b)
+	b.Suffix = "pdf"
+	p.myDB.ReplaceFile(b)
 }

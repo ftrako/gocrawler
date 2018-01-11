@@ -1,6 +1,9 @@
 package strutil
 
-import "strings"
+import (
+	"github.com/axgle/mahonia"
+	"strings"
+)
 
 func SubString(str string, start int, end int) string {
 	if str == "" {
@@ -44,4 +47,26 @@ func LastIndex(str string, substr string) int {
 	prefix := []byte(str)[0:index]
 	rs := []rune(string(prefix))
 	return len(rs)
+}
+
+func Gbk2Utf8(str string) string {
+	srcCode := "gbk"
+	tagCode := "utf-8"
+	srcCoder := mahonia.NewDecoder(srcCode)
+	srcResult := srcCoder.ConvertString(str)
+	tagCoder := mahonia.NewDecoder(tagCode)
+	_, cdata, _ := tagCoder.Translate([]byte(srcResult), true)
+	result := string(cdata)
+	return result
+}
+
+func Utf82Gbk(str string) string {
+	srcCode := "utf-8"
+	tagCode := "gbk"
+	srcCoder := mahonia.NewDecoder(srcCode)
+	srcResult := srcCoder.ConvertString(str)
+	tagCoder := mahonia.NewDecoder(tagCode)
+	_, cdata, _ := tagCoder.Translate([]byte(srcResult), true)
+	result := string(cdata)
+	return result
 }

@@ -38,7 +38,7 @@ func (p *Ape51Parser) Filter(url string) bool {
 }
 
 func (p *Ape51Parser) Parse(doc *goquery.Document) []string {
-	urls := p.BaseParser.parseHref(doc)
+	urls := p.BaseParser.Parse(doc)
 	p.doParse(doc)
 	return urls
 }

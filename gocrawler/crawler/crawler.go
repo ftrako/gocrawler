@@ -7,7 +7,6 @@ import (
 	"gocrawler/log"
 	"gocrawler/parser"
 	"gocrawler/urlmgr"
-	"gocrawler/util/httputil"
 	"runtime"
 	"strings"
 	"sync"
@@ -15,28 +14,33 @@ import (
 )
 
 type Crawler struct {
-	urlQueue *urlmgr.UrlQueue
-	parser   parser.IParser
-	//count     uint64 // 抓的条数
+	urlQueue  *urlmgr.UrlQueue
+	parser    parser.IParser
 	waitGroup sync.WaitGroup
-	//locker    sync.Mutex
 
 	log *log.FileLog
 }
 
 func NewCrawler(parserType parser.ParserType, resume bool) *Crawler {
 	p := new(Crawler)
-	p.SetupData(parserType, resume)
+	res := p.SetupData(parserType, resume)
+	if !res {
+		return nil
+	}
 	return p
 }
 
-func (p *Crawler) SetupData(parserType parser.ParserType, resume bool) {
+func (p *Crawler) SetupData(parserType parser.ParserType, resume bool) bool {
 	p.parser = parser.NewParser(parserType)
+	if p.parser == nil {
+		return false
+	}
 	p.urlQueue = urlmgr.NewUrlQueue(p.parser.GetId(), resume)
 
 	year, month, day := time.Now().Date()
 	logName := fmt.Sprintf("trace_%04d%02d%02d.log", year, month, day)
 	p.log = log.NewFileLog(conf.GetDataPath() + "/log/" + logName)
+	return true
 }
 
 func (p *Crawler) Release() {
@@ -77,7 +81,7 @@ func (p *Crawler) toggleWork() {
 func (p *Crawler) doWork(url string) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println(err)
+			fmt.Println(err, url)
 		}
 		p.urlQueue.DoneUrl(url)
 		p.toggleWork()
@@ -86,20 +90,31 @@ func (p *Crawler) doWork(url string) {
 		return
 	}
 
-	//doc, err := goquery.NewDocument(url)
-	timeout := time.Second * 20
-	resp, err := httputil.DoGetWithTimeout(url, timeout)
+	startTime := time.Now().Unix()
+	doc, err := goquery.NewDocument(url)
 	if err != nil {
-		fmt.Println("error:", url, time.Now())
-		p.log.Println("timeout " + timeout.String() + ", url " + url)
+		//p.log.Println("error: failed new doc " + err.Error())
 		return
+	}
+	endTime := time.Now().Unix()
+	if endTime-startTime > 5 {
+		p.log.Println(fmt.Sprintf("long time %0d , url = %s", endTime-startTime, url))
 	}
 
-	doc, err2 := goquery.NewDocumentFromResponse(resp)
-	if err2 != nil {
-		fmt.Println("error:", err2)
-		return
-	}
+	//doc, err := goquery.NewDocument(url)
+	//timeout := time.Second * 20
+	//resp, err := httputil.DoGetWithTimeout(url, timeout)
+	//if err != nil {
+	//	fmt.Println("error:", url, time.Now())
+	//	p.log.Println("timeout " + timeout.String() + ", url " + url)
+	//	return
+	//}
+
+	//doc, err2 := goquery.NewDocumentFromResponse(resp)
+	//if err2 != nil {
+	//	fmt.Println("error:", err2)
+	//	return
+	//}
 
 	urls := p.parser.Parse(doc)
 	for _, v := range urls {

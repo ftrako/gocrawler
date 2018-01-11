@@ -26,7 +26,7 @@ func (p *FileDB) ReplaceFile(bean *bean.FileBean) {
 		return
 	}
 
-	stmt, err := p.myDB.Prepare("replace into file values(?,?,?,?,?,?,?,?);")
+	stmt, err := p.myDB.Prepare("replace into file values(?,?,?,?,?,?,?,?,?,?,?);")
 	p.checkError(err)
 	_, err2 := stmt.Exec(cryptutil.MD5(bean.Url+bean.Download),
 		bean.Name,
@@ -34,8 +34,11 @@ func (p *FileDB) ReplaceFile(bean *bean.FileBean) {
 		bean.Url,
 		bean.Download,
 		bean.Pwd,
-		bean.ZipPwd,
-		bean.Type)
+		bean.UnzipPwd,
+		bean.Type,
+		bean.Size,
+		bean.UpdateDate,
+		bean.Author)
 	if stmt != nil {
 		stmt.Close()
 	}

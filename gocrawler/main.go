@@ -12,9 +12,10 @@ import (
 )
 
 func main() {
-	fmt.Println("start crawler...", time.Now())
+	startTime := time.Now()
+	fmt.Println("start crawler...", startTime)
 
-	var parserType parser.ParserType = parser.ParserTypeFile
+	var parserType parser.ParserType = parser.ParserType_None
 
 	var restart = false
 
@@ -23,7 +24,7 @@ func main() {
 			continue
 		}
 		if strings.ToLower(value) == "test" {
-			test.TestCalc()
+			test.TestEnum()
 			return
 		}
 
@@ -34,29 +35,46 @@ func main() {
 		// 指定解析器
 		if v, err := strconv.Atoi(value); err == nil {
 			switch v {
-			case 0:
-				parserType = parser.ParserTypeWandoujia
 			case 1:
-				parserType = parser.ParserTypeAppStore
+				parserType = parser.ParserType_AndroidWandoujia
 			case 2:
+				parserType = parser.ParserType_AndroidAnzhi
+			case 100:
+				parserType = parser.ParserType_IosAppStore
+			case 101:
+				parserType = parser.ParserType_IosAnn9
+			case 200:
 				parserType = parser.ParserTypeApe51
-			case 3:
-				parserType = parser.ParserTypeAnn9
-			case 4:
-				parserType = parser.ParserTypeFile
+			case 201:
+				parserType = parser.ParserType_FileXuexi111
+			case 202:
+				parserType = parser.ParserType_FileDowncc
+			case 203:
+				parserType = parser.ParserType_FileGdajie
+			case 204:
+				parserType = parser.ParserType_FileJava1234
+			case 205:
+				parserType = parser.ParserType_FilePdfzj
 			default:
 			}
 		}
 	}
 
+	started := false
 	if restart {
-		crawler.SharedService().RestartOneCrawler(parserType)
+		started = crawler.SharedService().RestartOneCrawler(parserType)
 	} else {
-		crawler.SharedService().StartOneCrawler(parserType)
+		started = crawler.SharedService().StartOneCrawler(parserType)
 	}
 	crawler.SharedService().Release()
 
+	if !started {
+		fmt.Println("error: failed to start crawler")
+	}
+
 	// time.Sleep(time.Second * 50)
 
-	fmt.Println("finished crawler! ", time.Now())
+	endTime := time.Now()
+	fmt.Println("finished crawler! ", endTime)
+	fmt.Println("take times", endTime.Unix()-startTime.Unix(), "s")
 }

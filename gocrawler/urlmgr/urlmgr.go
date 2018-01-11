@@ -6,6 +6,7 @@ import (
 	"gocrawler/backup"
 	"gocrawler/conf"
 	"gocrawler/util/cryptutil"
+	"gocrawler/util/timeutil"
 	"sync"
 	"time"
 )
@@ -93,7 +94,7 @@ func (p *UrlQueue) GetWaitUrl() string {
 	if len(p.waitMap) <= 0 { // 等待队列没有数据了
 		return ""
 	}
-	if p.runCount >= p.runCountMax { // 运行池已满
+	if p.runCount > p.runCountMax { // 运行池已满
 		return ""
 	}
 
@@ -134,7 +135,7 @@ func (p *UrlQueue) DoneUrl(url string) {
 	p.doneMap[md5] = url
 	p.runCount--
 
-	fmt.Println("doneurl wait len", len(p.waitMap), ",run len", p.runCount, ", done len", len(p.doneMap), ", done url", url)
+	fmt.Println("doneurl wait len", len(p.waitMap), ",run len", p.runCount, ", done len", len(p.doneMap), ",", timeutil.TimeStr(time.Now()), ", done url", url)
 }
 
 // Exist true表示队列中已存在

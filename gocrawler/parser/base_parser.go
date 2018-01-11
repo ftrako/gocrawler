@@ -53,13 +53,14 @@ func (p *BaseParser) Filter(url string) bool {
 
 	// 排除css,js等
 	filters := []string{".css", ".js",
-		".ico", ".jpg", ".jpeg", ".png", ".bmp", ".tif", ".gif",                                             // 图片
-		".mp3", ".asf", ".wma", ".wav", ".rm", ".real", ".ape", ".midi", ".flac", ".vqf", ".cd", ".ogg",     // 音频
-		".mp4", ".rm", ".rmvb", ".wmv", ".avi", ".3gp", ".mkv", ".flv", ".mpeg", ".mov", ".dat",             // 视频
-		".zip", ".7z", ".gz", ".rar", ".bz2", ".tar", ".iso", ".cab", ".xz", ".parcel",                      // 压缩文件
-		".exe", ".pkg", ".rpm", ".deb", ".apk", ".ipa", ".dll", ".dmg", ".msi",                              // 安装文件
-		".txt", ".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".wps", ".log", ".epub", ".json", // 文档文件
-		".bin", ".bak"} // 其它文件
+		".ico", ".jpg", ".jpeg", ".png", ".bmp", ".tif", ".gif", // 图片
+		".mp3", ".asf", ".wma", ".wav", ".rm", ".real", ".ape", ".midi", ".flac", ".vqf", ".cd", ".ogg", // 音频
+		".mp4", ".rm", ".rmvb", ".wmv", ".avi", ".3gp", ".mkv", ".flv", ".mpeg", ".mov", ".dat", ".f4v", ".mpg", // 视频
+		".zip", ".7z", ".gz", ".rar", ".bz2", ".tar", ".iso", ".cab", ".xz", ".parcel", ".cbr", ".cbz", // 压缩文件
+		".exe", ".pkg", ".rpm", ".deb", ".apk", ".ipa", ".dll", ".dmg", ".msi", ".cbr", ".ts", // 安装文件
+		".txt", ".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".wps", ".log", ".epub", ".json", ".epub", ".chm", // 文档文件
+		".bin", ".bak", ".cue", ".pet", ".mdf", ".mds", ".mdx", ".cbz", ".520", ".ace", ".csf",
+		".daa", ".divx", ".dts", ".gho", ".img", ".ipa", ".isz", ".ivc", ".jar", ".ts"} // 其它文件
 	for _, v := range filters {
 		if strings.HasSuffix(url, v) {
 			return false
@@ -74,6 +75,11 @@ func (p *BaseParser) Filter(url string) bool {
 		}
 	}
 
+	// 非http和https开头的非法
+	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+		return false
+	}
+
 	// 页面大小限制
 	if !p.sizeFilter(url) {
 		return false
@@ -82,7 +88,7 @@ func (p *BaseParser) Filter(url string) bool {
 	return true
 }
 
-func (p *BaseParser) parseHref(doc *goquery.Document) []string {
+func (p *BaseParser) Parse(doc *goquery.Document) []string {
 	var urls = make([]string, 0, 1000)
 	if doc == nil {
 		return urls

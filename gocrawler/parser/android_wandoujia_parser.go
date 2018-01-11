@@ -6,29 +6,27 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"gocrawler/db"
 )
 
-type WandoujiaParser struct {
-	BaseParser
-
-	os        string // android or ios
-	storeId   string
-	storeName string
-	myDB      *db.AppDB
+type AndroidWandoujiaParser struct {
+	BaseAppParser
 }
 
-func (p *WandoujiaParser) SetupData() {
+func (p *AndroidWandoujiaParser) SetupData() {
+	p.BaseAppParser.SetupData()
 	p.os = "android"
 	p.storeId = "wandoujia"
 	p.storeName = "豌豆荚"
 	p.id = p.storeId
-	p.myDB = db.NewAppDB()
-	p.startUrl = "http://www.wandoujia.com/category/app"
+	p.startUrl = "http://www.wandoujia.com/apps"
 }
 
-func (p *WandoujiaParser) Filter(url string) bool {
-	if !strings.Contains(url, "wandoujia.com") {
+func (p *AndroidWandoujiaParser) Filter(url string) bool {
+	if !strings.Contains(url, "wandoujia.com/apps") &&
+		!strings.Contains(url, "wandoujia.com/category") &&
+		!strings.Contains(url, "wandoujia.com/top") &&
+		!strings.Contains(url, "wandoujia.com/essential") &&
+		!strings.Contains(url, "wandoujia.com/special") {
 		return false
 	}
 	if !p.BaseParser.Filter(url) {
@@ -37,13 +35,31 @@ func (p *WandoujiaParser) Filter(url string) bool {
 	return true
 }
 
-func (p *WandoujiaParser) Parse(doc *goquery.Document) []string {
-	urls := p.BaseParser.parseHref(doc)
+func (p *AndroidWandoujiaParser) Parse(doc *goquery.Document) []string {
+	urls := p.BaseParser.Parse(doc)
+
+	// 部分url需要处理，不然会跳转到自动下载apk
+	size := len(urls)
+	for loop := 0; loop < size; loop++ {
+		url := urls[loop]
+		if strings.HasSuffix(url, "/binding") {
+			url = strutil.SubString(url, 0, strutil.Len(url)-len("/binding"))
+			urls[loop] = url
+		} else if strings.Contains(url, "/binding?") {
+			index := strutil.Index(url, "/binding?")
+			url = strutil.SubString(url, 0, index)
+			urls[loop] = url
+		} else if strings.Contains(url, "/download?") {
+			index := strutil.Index(url, "/download?")
+			url = strutil.SubString(url, 0, index)
+			urls[loop] = url
+		}
+	}
 	p.doParse(doc)
 	return urls
 }
 
-func (p *WandoujiaParser) doParse(doc *goquery.Document) {
+func (p *AndroidWandoujiaParser) doParse(doc *goquery.Document) {
 	defer func() {
 		if err := recover(); err != nil {
 		}
@@ -56,7 +72,7 @@ func (p *WandoujiaParser) doParse(doc *goquery.Document) {
 	p.parseApp(doc)
 }
 
-func (p *WandoujiaParser) parseCategory(doc *goquery.Document) {
+func (p *AndroidWandoujiaParser) parseCategory(doc *goquery.Document) {
 	if doc == nil {
 		return
 	}
@@ -78,7 +94,7 @@ func (p *WandoujiaParser) parseCategory(doc *goquery.Document) {
 	})
 }
 
-func (p *WandoujiaParser) parseSubCategory(doc *goquery.Document, basequery string, basename string) {
+func (p *AndroidWandoujiaParser) parseSubCategory(doc *goquery.Document, basequery string, basename string) {
 	if doc == nil {
 		return
 	}
@@ -98,7 +114,7 @@ func (p *WandoujiaParser) parseSubCategory(doc *goquery.Document, basequery stri
 	})
 }
 
-func (p *WandoujiaParser) parseApp(doc *goquery.Document) {
+func (p *AndroidWandoujiaParser) parseApp(doc *goquery.Document) {
 	var b bean.AppBean
 	b.Os = p.os
 	b.StoreId = p.storeId

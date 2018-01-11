@@ -2,7 +2,6 @@ package parser
 
 import (
 	"gocrawler/bean"
-	"gocrawler/db"
 	"gocrawler/util/strutil"
 	"strings"
 
@@ -10,30 +9,18 @@ import (
 )
 
 type AppStoreParser struct {
-	BaseParser
-
-	os        string // android or ios
-	storeId   string
-	storeName string
-	myDB      *db.AppDB
+	BaseAppParser
 
 	iosJsonParser *AppStoreParseJson
 }
 
 func (p *AppStoreParser) SetupData() {
+	p.BaseAppParser.SetupData()
 	p.os = "ios"
 	p.storeId = "appstore"
 	p.storeName = "苹果商店"
 	p.id = p.storeId
-	p.myDB = db.NewAppDB()
 	p.startUrl = "https://itunes.apple.com/cn/genre?id=36"
-}
-
-func (p *AppStoreParser) Release() {
-	if p.myDB != nil {
-		p.myDB.Close()
-		p.myDB = nil
-	}
 }
 
 func (p *AppStoreParser) Filter(url string) bool {
@@ -47,7 +34,7 @@ func (p *AppStoreParser) Filter(url string) bool {
 }
 
 func (p *AppStoreParser) Parse(doc *goquery.Document) []string {
-	urls := p.BaseParser.parseHref(doc)
+	urls := p.BaseParser.Parse(doc)
 	p.doParse(doc)
 	return urls
 }
