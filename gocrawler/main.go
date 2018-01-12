@@ -19,7 +19,12 @@ func main() {
 
 	var restart = false
 
+	index := 0
 	for _, value := range os.Args {
+		index++
+		if index == 1 {
+			continue // 第一个是命令指令
+		}
 		if value == "" {
 			continue
 		}

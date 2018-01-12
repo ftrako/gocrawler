@@ -46,12 +46,14 @@ func (p *CrawlerService) startOneCrawler(parserType parser.ParserType, restart b
 	if _, ok := p.crawlers[strType]; ok { // 已经启动
 		return false
 	}
-	p.crawlers[strType] = NewCrawler(parserType, !restart)
-	if p.crawlers[strType] == nil {
+	c := NewCrawler(parserType, !restart)
+	if c == nil {
 		return false
 	}
+	p.crawlers[strType] = c
 	p.crawlers[strType].Start()
 	p.crawlers[strType].Release()
+	delete(p.crawlers, strType)
 	return true
 }
 
