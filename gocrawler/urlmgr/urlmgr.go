@@ -46,8 +46,8 @@ func (p *UrlQueue) SetupData(name string, resume bool) {
 	p.waitList = list.New()
 	p.runCountMax = 10
 	p.name = name
-	p.waitBak = backup.NewBackup(conf.GetDataPath() + "/url/waiturlmap_" + p.name + ".dat")
-	p.doneBak = backup.NewBackup(conf.GetDataPath() + "/url/doneurlmap_" + p.name + ".dat")
+	p.waitBak = backup.NewBackup(conf.GetDataPath() + "/url/" + p.name + "_waiturlmap.dat")
+	p.doneBak = backup.NewBackup(conf.GetDataPath() + "/url/" + p.name + "_doneurlmap.dat")
 
 	if resume {
 		p.loadBackup()

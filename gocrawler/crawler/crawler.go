@@ -7,6 +7,7 @@ import (
 	"gocrawler/log"
 	"gocrawler/parser"
 	"gocrawler/urlmgr"
+	"gocrawler/util/strutil"
 	"runtime"
 	"strings"
 	"sync"
@@ -117,21 +118,39 @@ func (p *Crawler) doWork(url string) {
 	//}
 
 	urls := p.parser.Parse(doc)
+
+	preSplitUrl := doc.Url.Scheme + "://" + doc.Url.Host // 自动添加host组成一个完整的url
+	if doc.Url.Port() != "" {
+		preSplitUrl += ":" + doc.Url.Port()
+	}
+
+	preQuestionUrl := ""
+	index := strutil.Index(url, "?")
+	if index >= 0 {
+		preQuestionUrl = strutil.SubString(url, 0, index)
+	}
+
+	start := strutil.LastIndex(url, "/")
+	preOtherUrl := strutil.SubString(url, 0, start)
+
 	for _, v := range urls {
 		if v == "" {
 			continue
 		}
 		if !strings.HasPrefix(v, "http://") && !strings.HasPrefix(v, "https://") { // 支持内部链接
-			preUrl := doc.Url.Scheme + "://" + doc.Url.Host // 自动添加host组成一个完整的url
-			if doc.Url.Port() != "" {
-				preUrl += ":" + doc.Url.Port()
+			if strings.HasPrefix(v, "/") {
+				v = preSplitUrl + v
+			} else if strings.HasPrefix(v, "./") {
+				v = strutil.SubString(v, 1, strutil.Len(v))
+				v = preSplitUrl + v
+			} else if strings.HasPrefix(v, "../") {
+				v = strutil.SubString(v, 2, strutil.Len(v))
+				v = preSplitUrl + v
+			} else if strings.HasPrefix(v, "?") {
+				v = preQuestionUrl + v
+			} else {
+				v = preOtherUrl + "/" + v
 			}
-
-			if !strings.HasPrefix(v, "/") {
-				preUrl += "/"
-			}
-
-			v = preUrl + v
 		}
 		if p.urlQueue.Exist(v) { // 先检查是否已存在，再执行过滤器，会提高性能
 			continue

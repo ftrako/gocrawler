@@ -47,6 +47,12 @@ func main() {
 				parserType = parser.ParserType_AndroidWandoujia
 			case 2:
 				parserType = parser.ParserType_AndroidAnzhi
+			case 3:
+				parserType = parser.ParserType_AndroidGoogle
+			case 4:
+				parserType = parser.ParserType_AndroidQQ
+			case 5:
+				parserType = parser.ParserType_AndroidMi
 			case 100:
 				parserType = parser.ParserType_IosAppStore
 			case 101:
@@ -71,6 +77,7 @@ func main() {
 
 	if len(parserTypes) == 0 {
 		parserTypes = append(parserTypes, parser.ParserType_None)
+		parserTypes = append(parserTypes, parser.ParserType_AndroidMi)
 	}
 
 	for _, v := range parserTypes {

@@ -8,6 +8,12 @@ func NewParser(parserType ParserType) IParser {
 		p = new(AndroidWandoujiaParser)
 	case ParserType_AndroidAnzhi:
 		p = new(AndroidAnzhiParser)
+	case ParserType_AndroidGoogle:
+		p = new(AndroidGoogleParser)
+	case ParserType_AndroidQQ:
+		p = new(AndroidQqParser)
+	case ParserType_AndroidMi:
+		p = new(AndroidMiParser)
 	case ParserType_IosAppStore:
 		p = new(AppStoreParser)
 	case ParserType_IosAnn9:

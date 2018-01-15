@@ -27,6 +27,10 @@ func (p *Ann9Parser) Filter(url string) bool {
 	if !p.BaseParser.Filter(url) {
 		return false
 	}
+	if !strings.Contains(url, "ann9.com/d") &&
+		!strings.Contains(url, "?p=") {
+		return false
+	}
 	return true
 }
 

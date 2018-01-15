@@ -30,6 +30,12 @@ func (p *AppStoreParser) Filter(url string) bool {
 	if !p.BaseParser.Filter(url) {
 		return false
 	}
+
+	if !strings.Contains(url, "/genre/") &&
+		!strings.Contains(url, "/app/") {
+		return false
+	}
+
 	return true
 }
 
