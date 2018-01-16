@@ -14,7 +14,7 @@ import (
 type AppStoreParseJson struct {
 }
 
-func (p *AppStoreParseJson) requestJsonByBundleId(bundleId string) *bean.AppBean {
+func (p *AppStoreParseJson) requestJsonByBundleId(bundleId string, categories map[string]*bean.CategoryBean) *bean.AppBean {
 	// lookup应用信息，全球收不到时再搜索中国区
 	urls := []string{"https://itunes.apple.com/lookup?bundleId=" + bundleId, "https://itunes.apple.com/cn/lookup?bundleId=" + bundleId}
 	var jsontext string
@@ -24,11 +24,11 @@ func (p *AppStoreParseJson) requestJsonByBundleId(bundleId string) *bean.AppBean
 			break
 		}
 	}
-	b := p.parseJson(jsontext)
+	b := p.parseJson(jsontext, categories)
 	return b
 }
 
-func (p *AppStoreParseJson) requestJsonByAppId(appId string) *bean.AppBean {
+func (p *AppStoreParseJson) requestJsonByAppId(appId string, categories map[string]*bean.CategoryBean) *bean.AppBean {
 	// lookup应用信息，全球收不到时再搜索中国区
 	urls := []string{"https://itunes.apple.com/lookup?id=" + appId, "https://itunes.apple.com/cn/lookup?id=" + appId}
 	var jsontext string
@@ -38,7 +38,7 @@ func (p *AppStoreParseJson) requestJsonByAppId(appId string) *bean.AppBean {
 			break
 		}
 	}
-	b := p.parseJson(jsontext)
+	b := p.parseJson(jsontext, categories)
 	return b
 }
 
@@ -55,7 +55,7 @@ func (p *AppStoreParseJson) requestJson(url string) string {
 	return string(body)
 }
 
-func (p *AppStoreParseJson) parseJson(jsontext string) *bean.AppBean {
+func (p *AppStoreParseJson) parseJson(jsontext string, categories map[string]*bean.CategoryBean) *bean.AppBean {
 	if jsontext == "" {
 		return nil
 	}
@@ -95,6 +95,10 @@ func (p *AppStoreParseJson) parseJson(jsontext string) *bean.AppBean {
 			c := ";"
 			for _, v := range tmpCids {
 				if v2, ok2 := v.(string); ok2 {
+					b := categories[v2]
+					if b != nil {
+						v2 = b.Name
+					}
 					c += v2 + ";"
 				}
 			}

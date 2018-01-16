@@ -1,18 +1,23 @@
 package parser
 
-import "gocrawler/db"
+import (
+	"gocrawler/bean"
+	"gocrawler/db"
+)
 
 type BaseAppParser struct {
 	BaseParser
 
-	os        string // android or ios
-	storeId   string
-	storeName string
-	myDB      *db.AppDB
+	os         string // android or ios
+	storeId    string
+	storeName  string
+	categories map[string]*bean.CategoryBean
+	myDB       *db.AppDB
 }
 
 func (p *BaseAppParser) SetupData() {
 	p.myDB = db.NewAppDB()
+	p.categories = make(map[string]*bean.CategoryBean)
 }
 
 func (p *BaseAppParser) Release() {

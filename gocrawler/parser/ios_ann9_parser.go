@@ -13,7 +13,6 @@ type Ann9Parser struct {
 
 func (p *Ann9Parser) SetupData() {
 	p.AppStoreParser.SetupData()
-	p.os = "ios"
 	p.storeId = "ann9"
 	p.storeName = "ann9"
 	p.id = p.storeId
@@ -62,7 +61,7 @@ func (p *Ann9Parser) parseApp(doc *goquery.Document) {
 	index := strutil.LastIndex(href, "appid=") + len("appid=")
 	id := strutil.SubString(href, index, strutil.Len(href))
 
-	b := p.iosJsonParser.requestJsonByAppId(id)
+	b := p.iosJsonParser.requestJsonByAppId(id, p.categories)
 	if b == nil {
 		return
 	}

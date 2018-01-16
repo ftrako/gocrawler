@@ -21,6 +21,14 @@ func (p *AppStoreParser) SetupData() {
 	p.storeName = "苹果商店"
 	p.id = p.storeId
 	p.startUrl = "https://itunes.apple.com/cn/genre?id=36"
+
+	c := p.myDB.ListCategoires()
+	for _, v := range c {
+		if v.CategoryId == "" {
+			continue
+		}
+		p.categories[v.CategoryId] = v
+	}
 }
 
 func (p *AppStoreParser) Filter(url string) bool {
@@ -75,7 +83,7 @@ func (p *AppStoreParser) parseCategory(doc *goquery.Document) {
 			}
 			var c bean.CategoryBean
 			c.Name = s2.Text()
-			c.Cid = p.parseCid(href)
+			c.CategoryId = p.parseCid(href)
 			c.StoreId = p.storeId
 			c.StoreName = p.storeName
 			p.myDB.ReplaceCategory(&c)
@@ -97,7 +105,7 @@ func (p *AppStoreParser) parseCategory(doc *goquery.Document) {
 		}
 
 		var c bean.CategoryBean
-		c.Cid = p.parseCid(href)
+		c.CategoryId = p.parseCid(href)
 		c.Name = s2.Text()
 		c.StoreId = p.storeId
 		c.StoreName = p.storeName
@@ -112,7 +120,7 @@ func (p *AppStoreParser) parseCategory(doc *goquery.Document) {
 			}
 
 			var c2 bean.CategoryBean
-			c2.Cid = p.parseCid(href)
+			c2.CategoryId = p.parseCid(href)
 			c2.Name = s2.Text()
 			c2.StoreId = p.storeId
 			c2.StoreName = p.storeName
@@ -134,7 +142,7 @@ func (p *AppStoreParser) parseApp(doc *goquery.Document) {
 	end := strings.LastIndex(text, "?")
 	text = strutil.SubString(text, start, end)
 
-	b := p.iosJsonParser.requestJsonByAppId(text)
+	b := p.iosJsonParser.requestJsonByAppId(text, p.categories)
 	if b == nil {
 		return
 	}

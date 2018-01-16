@@ -53,7 +53,7 @@ func (p *AppDB) ReplaceCategory(bean *bean.CategoryBean) {
 	stmt, err := p.myDB.Prepare("replace into category values(?,?,?,?,?,?);")
 	p.checkError(err)
 	_, err2 := stmt.Exec(cryptutil.MD5(bean.Name+bean.SuperName+bean.StoreId),
-		bean.Cid,
+		bean.CategoryId,
 		bean.Name,
 		bean.SuperName,
 		bean.StoreId,
@@ -66,4 +66,22 @@ func (p *AppDB) ReplaceCategory(bean *bean.CategoryBean) {
 	if err2 != nil {
 		fmt.Println(err2.Error())
 	}
+}
+
+func (p *AppDB) ListCategoires() []*bean.CategoryBean {
+	var categories []*bean.CategoryBean
+	rows, err := p.myDB.Query("select * from category;")
+	if err != nil {
+		return categories
+	}
+	for rows.Next() {
+		var id string
+		var category bean.CategoryBean
+		err2 := rows.Scan(&id, &category.CategoryId, &category.Name, &category.SuperName, &category.StoreId, &category.StoreName)
+		if err2 != nil {
+			continue
+		}
+		categories = append(categories, &category)
+	}
+	return categories
 }
