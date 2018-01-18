@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"gocrawler/cmd"
 	"gocrawler/crawler"
 	"gocrawler/parser"
 	"gocrawler/test"
@@ -12,6 +13,8 @@ import (
 )
 
 func main() {
+	cmd.Cmd()
+
 	startTime := time.Now()
 	fmt.Println("start crawler...", startTime)
 
@@ -19,18 +22,13 @@ func main() {
 
 	var restart = false
 
-	index := 0
-	for _, value := range os.Args {
-		index++
-		if index == 1 {
-			continue // 第一个是命令指令
-		}
+	for _, value := range os.Args[1:] {
 		if value == "" {
 			continue
 		}
 		if strings.ToLower(value) == "test" {
-			test.TestEnum()
-			continue
+			test.TestCmd()
+			return
 		}
 
 		if strings.ToLower(value) == "restart" {
