@@ -14,7 +14,7 @@ const (
 	ParserTypeApe51             = 200 // 51ape网站
 	ParserType_FileXuexi111     = 201 // 爬文件
 	ParserType_FileDowncc       = 202
-	ParserType_FileGdajie       = 203
+	ParserType_FileGdajie       = 203 // deprecated，被封
 	ParserType_FileJava1234     = 204
 	ParserType_FilePdfzj        = 205
 )
