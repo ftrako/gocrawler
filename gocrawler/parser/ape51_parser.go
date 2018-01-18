@@ -17,7 +17,7 @@ type Ape51Parser struct {
 func (p *Ape51Parser) SetupData() {
 	p.myDB = db.NewMusicDB()
 	p.id = "ape51"
-	p.startUrl = "http://www.51ape.com/"
+	p.startUrl = "http://www.51ape.com/artist/"
 }
 
 func (p *Ape51Parser) Release() {
@@ -28,6 +28,18 @@ func (p *Ape51Parser) Release() {
 }
 
 func (p *Ape51Parser) Filter(url string) bool {
+	if strings.Contains(url, "51ape.com/zuoci/") ||
+		strings.Contains(url, "51ape.com/zuoqu/") ||
+		strings.Contains(url, "51ape.com/tags/") ||
+		strings.Contains(url, "51ape.com/zhuanji/") ||
+		strings.Contains(url, "51ape.com/apeyinyue/") ||
+		strings.Contains(url, "51ape.com/flacyinyue/") ||
+		strings.Contains(url, "51ape.com/wavyinyue/") ||
+		strings.Contains(url, "51ape.com/yueyu/") ||
+		strings.Contains(url, "51ape.com/yingwen/") ||
+		strings.Contains(url, "51ape.com/经典歌曲/") {
+		return false
+	}
 	if !strings.Contains(url, "51ape.com") {
 		return false
 	}
