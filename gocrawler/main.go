@@ -36,41 +36,10 @@ func main() {
 			continue
 		}
 
-		var parserType parser.ParserType = parser.ParserType_None
-
 		// 指定解析器
 		if v, err := strconv.Atoi(value); err == nil {
-			switch v {
-			case 1:
-				parserType = parser.ParserType_AndroidWandoujia
-			case 2:
-				parserType = parser.ParserType_AndroidAnzhi
-			case 3:
-				parserType = parser.ParserType_AndroidGoogle
-			case 4:
-				parserType = parser.ParserType_AndroidQQ
-			case 5:
-				parserType = parser.ParserType_AndroidMi
-			case 100:
-				parserType = parser.ParserType_IosAppStore
-			case 101:
-				parserType = parser.ParserType_IosAnn9
-			case 200:
-				parserType = parser.ParserTypeApe51
-			case 201:
-				parserType = parser.ParserType_FileXuexi111
-			case 202:
-				parserType = parser.ParserType_FileDowncc
-			case 203:
-				parserType = parser.ParserType_FileGdajie
-			case 204:
-				parserType = parser.ParserType_FileJava1234
-			case 205:
-				parserType = parser.ParserType_FilePdfzj
-			default:
-			}
+			parserTypes = append(parserTypes, parser.ParserType(v))
 		}
-		parserTypes = append(parserTypes, parserType)
 	}
 
 	if len(parserTypes) == 0 {
